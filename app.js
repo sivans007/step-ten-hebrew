@@ -973,7 +973,7 @@ function renderNav() {
     ["journal", "מחשבות", "M4 20h4L19 9l-4-4L4 16v4z M13.5 6.5l4 4 M12 20h8"],
     ["history", "היסטוריה", "M12 7v5l3 2 M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["calendar", "לוח שנה", "M4 5h16v14H4z M4 10h16 M9 14h2 M13 14h2 M9 17h2"],
-    ["settings", "הגדרות", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19 12h2 M3 12h2 M12 3v2 M12 19v2 M17 7l1.5-1.5 M5.5 18.5L7 17 M17 17l1.5 1.5 M5.5 5.5L7 7"]
+    ["settings", "הגדרות", "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"]
   ];
   nav.innerHTML = items
     .map(
@@ -1055,6 +1055,20 @@ function renderToday() {
     ${renderDialog(entry)}`;
 }
 
+const ICONS = {
+  gear: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  pen: "M4 20h4L19 9l-4-4L4 16v4z M13.5 6.5l4 4 M12 20h8",
+  clock: "M12 7v5l3 2 M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
+  calendar: "M4 5h16v14H4z M8 3v4 M16 3v4 M4 10h16",
+  sun: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 2.5v2 M12 19.5v2 M5.3 5.3l1.4 1.4 M17.3 17.3l1.4 1.4 M2.5 12h2 M19.5 12h2 M5.3 18.7l1.4-1.4 M17.3 6.7l1.4-1.4",
+  pin: "M12 21s-7-6.2-7-11.5a7 7 0 1 1 14 0C19 14.8 12 21 12 21z M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
+  chevron: "M9 6l6 6-6 6"
+};
+
+function icon(name, className = "") {
+  return `<svg class="icon ${className}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}" /></svg>`;
+}
+
 function renderTodayStart() {
   const entry = findEntry(today());
   const status = entryStatus(entry);
@@ -1063,24 +1077,35 @@ function renderTodayStart() {
     partial: "התחלת כבר היום. אפשר להמשיך מאיפה שעצרת.",
     completed: "סיימת את צעד עשר של היום. כל הכבוד!"
   }[status];
+  const shortDate = parseDate(today()).toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
   return `
-    <section class="card hero">
-      <p class="muted">${escapeHtml(formatLongDate(today()))}</p>
+    <header class="app-header">
+      <p class="app-title">צעד עשר</p>
+      <button type="button" class="round-button" data-nav="settings" aria-label="הגדרות">${icon("gear")}</button>
+    </header>
+    <section class="hero">
+      <p class="muted">רק להיום · ${escapeHtml(shortDate)}</p>
       <h1>${escapeHtml(greeting())}</h1>
-      <p>${escapeHtml(intro)}</p>
-      <p class="status-chip status-${status}">${status === "none" ? "עוד לא התחלת היום" : STATUS_LABELS[status]}</p>
-      <button type="button" class="primary-button wide" data-action="open-today">${status === "none" ? "התחלה" : "המשך"}</button>
+      <p class="hero-intro">${escapeHtml(intro)}</p>
     </section>
     ${renderCleanTime()}
+    <button type="button" class="card today-card today-${status}" data-action="open-today">
+      <span class="today-dot" aria-hidden="true"></span>
+      <span class="today-text"><strong>צעד עשר - חשבון נפש</strong><span class="today-status">${STATUS_LABELS[status]}</span></span>
+      ${icon("chevron", "chevron")}
+    </button>
     <section class="quick-grid">
-      <button type="button" class="card quick-card quick-journal" data-nav="journal"><strong>מחשבות ותפילות</strong><span>יומן אישי</span></button>
-      <button type="button" class="card quick-card" data-nav="history"><strong>היסטוריה</strong><span>רשומות קודמות</span></button>
-      <button type="button" class="card quick-card" data-nav="calendar"><strong>לוח שנה</strong><span>מבט חודשי</span></button>
-      <a class="card quick-card" href="https://www.naisrael.org.il/just-for-today/" target="_blank" rel="noopener noreferrer"><strong>רק להיום</strong><span>קריאה יומית באתר NA</span></a>
-      <a class="card quick-card" href="https://www.naisrael.org.il/meetings/" target="_blank" rel="noopener noreferrer"><strong>לוח פגישות</strong><span>חיפוש פגישות NA</span></a>
-    </section>`;
+      <button type="button" class="card quick-card quick-journal" data-nav="journal">${icon("pen", "tone-mint")}<strong>מחשבות ותפילות</strong><span>יומן אישי</span></button>
+      <button type="button" class="card quick-card" data-nav="history">${icon("clock", "tone-blue")}<strong>היסטוריה</strong><span>רשומות קודמות</span></button>
+      <button type="button" class="card quick-card" data-nav="calendar">${icon("calendar", "tone-muted")}<strong>לוח שנה</strong><span>מבט חודשי</span></button>
+      <a class="card quick-card" href="https://www.naisrael.org.il/just-for-today/" target="_blank" rel="noopener noreferrer">${icon("sun", "tone-muted")}<strong>רק להיום</strong><span>קריאה יומית באתר NA</span></a>
+    </section>
+    <a class="card list-card" href="https://www.naisrael.org.il/meetings/" target="_blank" rel="noopener noreferrer">
+      ${icon("pin", "tone-blue")}
+      <span class="list-text"><strong>לוח פגישות</strong><span>חיפוש פגישות NA</span></span>
+      ${icon("chevron", "chevron")}
+    </a>`;
 }
-
 
 function questionView(entry, question) {
   const answer = entry.answers?.[question.id]?.text || "";

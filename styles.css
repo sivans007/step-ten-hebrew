@@ -1,42 +1,54 @@
+/* צבעים בהשראת אפליקציית 12 הצעדים: כחול לילה, כרטיסים מעוגלים ומבטא מנטה. */
 :root {
   color-scheme: light dark;
-  --bg: #f7f3eb;
-  --surface: #fffdf8;
-  --text: #2c2823;
-  --muted: #7a7265;
-  --line: #eae2d4;
-  --accent: #2e6a94;
-  --accent-2: #1f4e70;
-  --accent-soft: #e8f0f6;
-  --accent-line: #d5e4f0;
+  --bg: #eef3f8;
+  --surface: #ffffff;
+  --surface-2: #f5f9fc;
+  --text: #13243a;
+  --muted: #5f7186;
+  --line: #dbe4ee;
+  --accent: #2c7a63;
+  --accent-2: #1f604c;
+  --accent-soft: #e2f1ea;
+  --accent-line: #c6e2d6;
   --on-accent: #ffffff;
+  --blue: #2f6d9e;
   --danger: #b0453b;
-  --green: #2a5443;
-  --green-soft: #e5eee8;
-  --amber: #a8742a;
-  --amber-soft: #f7ecd9;
-  --radius: 12px;
-  --shadow: 0 6px 20px rgba(70, 55, 30, 0.06);
+  --green: #2c7a63;
+  --green-soft: #e2f1ea;
+  --amber: #b07a22;
+  --amber-soft: #f8eedb;
+  --today-bg: #e2f1ea;
+  --today-line: #c6e2d6;
+  --ring-track: rgba(19, 36, 58, 0.08);
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow: 0 8px 24px rgba(19, 36, 58, 0.06);
   --nav-h: 64px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1712;
-    --surface: #241f19;
-    --text: #f3ece0;
-    --muted: #b3a895;
-    --line: #3a332a;
-    --accent: #7fb4da;
-    --accent-2: #a9cde6;
-    --accent-soft: #1e2a33;
-    --accent-line: #2c3b45;
-    --on-accent: #10202c;
-    --danger: #e9948b;
-    --green: #86c5a4;
-    --green-soft: #1b2a23;
-    --amber: #e3b56f;
-    --amber-soft: #33291b;
+    --bg: #0f1a27;
+    --surface: #152435;
+    --surface-2: #1b2e45;
+    --text: #eef2f7;
+    --muted: #8d9cb0;
+    --line: #23364c;
+    --accent: #8fd1b5;
+    --accent-2: #a6dcc5;
+    --accent-soft: #19323a;
+    --accent-line: #2a4a52;
+    --on-accent: #0f1a27;
+    --blue: #7fb4e6;
+    --danger: #f08f86;
+    --green: #8fd1b5;
+    --green-soft: #183634;
+    --amber: #f2c14e;
+    --amber-soft: #3a3020;
+    --today-bg: #183a35;
+    --today-line: #24544a;
+    --ring-track: rgba(255, 255, 255, 0.07);
     --shadow: none;
   }
 }
@@ -54,7 +66,7 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: "Assistant", "Segoe UI", Arial, "Noto Sans Hebrew", sans-serif;
+  font-family: "Heebo", "Assistant", "Segoe UI", Arial, "Noto Sans Hebrew", sans-serif;
   font-size: 17px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -104,11 +116,11 @@ p {
 }
 
 .card {
-  background: var(--surface);
+  background: linear-gradient(160deg, var(--surface-2), var(--surface) 70%);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 16px;
+  padding: 18px;
 }
 
 .muted {
@@ -134,9 +146,9 @@ p {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 48px;
+  min-height: 50px;
   padding: 10px 18px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   text-align: center;
   text-decoration: none;
@@ -144,7 +156,7 @@ p {
 }
 
 .primary-button {
-  background: var(--accent-2);
+  background: var(--accent);
   color: var(--on-accent);
 }
 
@@ -232,7 +244,7 @@ p {
   min-height: 48px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--bg);
   color: var(--text);
 }
@@ -281,7 +293,7 @@ p {
   min-height: 48px;
   padding: 6px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--bg);
   cursor: pointer;
 }
@@ -364,37 +376,184 @@ p {
   text-align: right;
 }
 
-/* מסך היום */
+/* מסך הבית */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.app-title {
+  color: var(--accent);
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.round-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
+}
+
+.tone-mint {
+  color: var(--accent);
+}
+
+.tone-blue {
+  color: var(--blue);
+}
+
+.tone-muted {
+  color: var(--muted);
+}
 
 .hero {
   display: grid;
-  gap: 10px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--surface)), var(--surface) 60%);
+  gap: 4px;
+  padding: 2px 2px 4px;
 }
 
 .hero h1 {
-  font-size: 1.6rem;
-  line-height: 1.25;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-intro {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.today-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 84px;
+  text-align: right;
+  color: var(--text);
+  background: var(--today-bg);
+  border-color: var(--today-line);
+}
+
+.today-dot {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--amber) 22%, transparent);
+}
+
+.today-completed .today-dot {
+  background: var(--green);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 22%, transparent);
+}
+
+.today-text {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.today-text strong {
+  font-size: 1.15rem;
+}
+
+.today-status {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.today-completed .today-status {
+  color: var(--green);
+}
+
+.chevron {
+  color: var(--muted);
+  width: 20px;
+  height: 20px;
 }
 
 .quick-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 }
 
 .quick-card {
   display: grid;
+  align-content: start;
+  gap: 4px;
+  min-height: 132px;
   text-decoration: none;
-  gap: 2px;
-  min-height: 72px;
   text-align: right;
   color: var(--text);
 }
 
+.quick-card .icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 14px;
+}
+
+.quick-card strong {
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
 .quick-card span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+}
+
+.list-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.list-card .icon:not(.chevron) {
+  width: 26px;
+  height: 26px;
+}
+
+.list-text {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 2px;
+}
+
+.list-text strong {
+  font-size: 1.1rem;
+}
+
+.list-text span {
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .status-chip {
@@ -531,7 +690,7 @@ p {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(20, 16, 10, 0.45);
+  background: rgba(8, 14, 24, 0.55);
 }
 
 .dialog {
@@ -553,7 +712,7 @@ p {
 
 .dialog-question {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--bg);
 }
 
@@ -642,7 +801,7 @@ p {
   min-height: 46px;
   padding: 4px 0;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
   font-weight: 700;
 }
@@ -747,7 +906,7 @@ p {
   min-height: 52px;
   padding: 4px 0;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: none;
   color: var(--muted);
   font-size: 0.78rem;
@@ -778,7 +937,7 @@ p {
   transform: translate(-50%, 20px);
   max-width: calc(100% - 32px);
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--text);
   color: var(--bg);
   font-weight: 600;
@@ -855,9 +1014,7 @@ p {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 18px 16px;
-  border-color: var(--green-soft);
-  background: linear-gradient(135deg, var(--green-soft), var(--surface) 75%);
+  padding: 20px 16px;
 }
 
 .clean-ring {
@@ -885,7 +1042,7 @@ p {
 }
 
 .ring-track {
-  stroke: color-mix(in srgb, var(--green) 14%, transparent);
+  stroke: var(--ring-track);
 }
 
 .ring-fill {
@@ -1036,11 +1193,7 @@ p {
 
 /* מחשבות ותפילות */
 
-.quick-journal {
-  grid-column: 1 / -1;
-  border-color: var(--accent-line);
-  background: linear-gradient(135deg, var(--accent-soft), var(--surface) 70%);
-}
+
 
 .journal-head {
   display: grid;
@@ -1079,4 +1232,12 @@ p {
 .journal-item-text {
   font-size: 0.98rem;
   overflow-wrap: anywhere;
+}
+
+.entry-header-top .ghost-button {
+  white-space: nowrap;
+}
+
+.quick-card {
+  padding: 18px 16px;
 }

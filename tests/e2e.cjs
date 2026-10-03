@@ -36,7 +36,7 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   assert((await page.textContent(".hero")).includes("מוכנה"), "home text gendered");
   assert(!(await page.isVisible(".celebrate")), "no milestone on a regular day");
   assert((await page.getAttribute("a.quick-card:has-text('רק להיום')", "href")) === "https://www.naisrael.org.il/just-for-today/", "just for today link");
-  assert((await page.getAttribute("a.quick-card:has-text('לוח פגישות')", "href")) === "https://www.naisrael.org.il/meetings/", "meetings link");
+  assert((await page.getAttribute("a.list-card:has-text('לוח פגישות')", "href")) === "https://www.naisrael.org.il/meetings/", "meetings link");
   await page.screenshot({ path: `${SP}/1-home.png`, fullPage: true });
   assert((await page.locator("a[href*='guide']").count()) === 0, "no guide links inside the app");
 
