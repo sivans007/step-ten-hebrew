@@ -384,6 +384,7 @@ p {
 
 .quick-card {
   display: grid;
+  text-decoration: none;
   gap: 2px;
   min-height: 72px;
   text-align: right;

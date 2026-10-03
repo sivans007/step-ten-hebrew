@@ -936,6 +936,8 @@ function renderTodayStart() {
     <section class="quick-grid">
       <button type="button" class="card quick-card" data-nav="history"><strong>היסטוריה</strong><span>רשומות קודמות</span></button>
       <button type="button" class="card quick-card" data-nav="calendar"><strong>לוח שנה</strong><span>מבט חודשי</span></button>
+      <a class="card quick-card" href="https://www.naisrael.org.il/just-for-today/" target="_blank" rel="noopener noreferrer"><strong>רק להיום</strong><span>קריאה יומית באתר NA</span></a>
+      <a class="card quick-card" href="https://www.naisrael.org.il/meetings/" target="_blank" rel="noopener noreferrer"><strong>לוח פגישות</strong><span>חיפוש פגישות NA</span></a>
     </section>`;
 }
 
