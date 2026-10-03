@@ -175,6 +175,20 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   assert(await page.isVisible("#nav"), "works offline after first load");
   await context.setOffline(false);
 
+  // guide page
+  const guide = await context.newPage();
+  await guide.goto(URL + "guide.html");
+  const broken = await guide.evaluate(async () => {
+    const imgs = [...document.querySelectorAll("img")];
+    for (const img of imgs) { img.loading = "eager"; if (!img.complete) await new Promise((r) => { img.onload = img.onerror = r; }); }
+    return imgs.filter((img) => !img.naturalWidth).map((img) => img.src);
+  });
+  assert(broken.length === 0, "guide images load " + JSON.stringify(broken));
+  assert(await guide.evaluate(() => document.documentElement.scrollWidth <= 360), "guide fits 360px");
+  assert((await guide.locator("#iphone").count()) === 1 && (await guide.locator("#android").count()) === 1, "guide has iPhone and Android sections");
+  await guide.screenshot({ path: `${SP}/12-guide.png`, fullPage: true });
+  await guide.close();
+
   // manifest
   const manifest = await (await page.request.get(URL + "manifest.webmanifest")).json();
   assert(manifest.name === "צעד עשר" && manifest.icons.length >= 3, "manifest");

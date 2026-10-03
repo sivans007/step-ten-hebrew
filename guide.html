@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>צעד עשר: מדריך</title>
+    <meta name="description" content="מדריך קצר לאפליקציית צעד עשר, ואיך מוסיפים אותה למסך הבית באייפון ובאנדרואיד." />
+    <meta name="theme-color" content="#f7f3eb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1712" media="(prefers-color-scheme: dark)" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .guide {
+        padding-bottom: 48px;
+      }
+
+      .guide-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .guide-top img {
+        border-radius: 14px;
+      }
+
+      .guide-top h1 {
+        font-size: 1.6rem;
+        line-height: 1.2;
+      }
+
+      .guide h2 {
+        font-size: 1.35rem;
+        margin-top: 10px;
+      }
+
+      .jump {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .feature {
+        display: grid;
+        gap: 12px;
+      }
+
+      .feature h3,
+      .step h3 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .shot {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        justify-self: center;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #f7f3eb;
+      }
+
+      .steps {
+        display: grid;
+        gap: 14px;
+      }
+
+      .step {
+        display: grid;
+        gap: 10px;
+      }
+
+      .step .shot {
+        border: 0;
+        max-width: 260px;
+        background: transparent;
+      }
+
+      .note {
+        padding: 12px 14px;
+        border-radius: var(--radius);
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      @media (min-width: 680px) {
+        .feature,
+        .step {
+          grid-template-columns: 1fr 260px;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page guide">
+      <header class="guide-top">
+        <img src="icons/icon.svg" alt="" width="56" height="56" />
+        <div>
+          <h1>צעד עשר</h1>
+          <p class="muted">מדריך קצר בתמונות</p>
+        </div>
+      </header>
+
+      <p class="lead">חשבון נפש יומי בטלפון, בעברית, בחינם. הכול נשמר רק במכשיר שלכם, בלי חשבון ובלי שרת.</p>
+
+      <div class="action-row">
+        <a class="primary-button" href="./">לפתיחת האפליקציה</a>
+      </div>
+
+      <nav class="jump" aria-label="קפיצה להוראות התקנה">
+        <a class="ghost-button" href="#iphone">התקנה באייפון</a>
+        <a class="ghost-button" href="#android">התקנה באנדרואיד</a>
+      </nav>
+
+      <h2 id="what">מה יש באפליקציה</h2>
+
+      <section class="card feature">
+        <div>
+          <h3>מסך הבית וזמן נקי</h3>
+          <p>בפתיחה הראשונה בוחרים שם, לשון פנייה (זכר או נקבה) ותאריך ניקיון. במסך הבית רואים כמה זמן אתם נקיים, וקישורים ל"רק להיום" וללוח הפגישות.</p>
+        </div>
+        <img class="shot" src="guide/app-home.jpg" alt="מסך הבית: ברכה, כפתור התחלה וספירת ימים נקיים" width="360" height="700" loading="lazy" />
+      </section>
+
+      <section class="card feature">
+        <div>
+          <h3>שאלות הדו"ח היומי</h3>
+          <p>36 שאלות לחשבון נפש. כותבים, או מכתיבים עם סמל המיקרופון שבמקלדת. הכול נשמר אוטומטית. אפשר להוסיף, לערוך ולהסתיר שאלות, רק להיום או לתמיד.</p>
+        </div>
+        <img class="shot" src="guide/app-questions.jpg" alt="מסך השאלות עם תשובות" width="360" height="700" loading="lazy" />
+      </section>
+
+      <section class="card feature">
+        <div>
+          <h3>היסטוריה ולוח שנה</h3>
+          <p>כל יום שמילאתם נשמר. בלוח השנה רואים בנקודה ירוקה ימים שהושלמו, ואפשר לחזור לכל יום, לקרוא אותו או להדפיס אותו כ-PDF.</p>
+        </div>
+        <img class="shot" src="guide/app-calendar.jpg" alt="לוח שנה חודשי עם ימים מסומנים" width="360" height="700" loading="lazy" />
+      </section>
+
+      <section class="card feature">
+        <div>
+          <h3>תזכורת וגיבוי</h3>
+          <p>בהגדרות בוחרים שעה ומוסיפים תזכורת יומית ליומן של הטלפון. כדאי לגבות לקובץ מדי פעם, כי המידע נשמר רק במכשיר.</p>
+        </div>
+        <img class="shot" src="guide/app-settings.jpg" alt="מסך ההגדרות: תזכורת ביומן וגיבוי" width="360" height="700" loading="lazy" />
+      </section>
+
+      <section class="card feature">
+        <div>
+          <h3>ברכה בימים מיוחדים</h3>
+          <p>ב-30, 60 ו-90 יום, בחצי שנה, בשנה ובכל שנה, וגם ב-100 וב-1,000 ימים, מחכה לכם ברכה קטנה.</p>
+        </div>
+        <img class="shot" src="guide/app-milestone.jpg" alt="ברכת מזל טוב לשנה נקייה" width="360" height="700" loading="lazy" />
+      </section>
+
+      <h2 id="iphone">הוספה למסך הבית באייפון</h2>
+      <p class="note">חשוב: באייפון עושים את זה מתוך <strong>Safari</strong>.</p>
+
+      <div class="steps">
+        <section class="card step">
+          <div>
+            <h3>1. פותחים את האתר ב-Safari</h3>
+            <p>נכנסים לכתובת של האפליקציה.</p>
+          </div>
+          <img class="shot" src="guide/ios-1.jpg" alt="האפליקציה פתוחה ב-Safari" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>2. לוחצים על כפתור השיתוף</h3>
+            <p>הריבוע עם החץ למעלה, בסרגל שבתחתית המסך. אם הסרגל לא מופיע, גוללים מעט למעלה.</p>
+          </div>
+          <img class="shot" src="guide/ios-2.jpg" alt="כפתור השיתוף מסומן בתחתית המסך" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>3. בוחרים "הוספה למסך הבית"</h3>
+            <p>אם לא רואים את האפשרות, גוללים מטה ברשימה.</p>
+          </div>
+          <img class="shot" src="guide/ios-3.jpg" alt="ברשימת השיתוף מסומן: הוספה למסך הבית" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>4. לוחצים "הוספה"</h3>
+            <p>בפינה העליונה של המסך.</p>
+          </div>
+          <img class="shot" src="guide/ios-4.jpg" alt="מסך הוספה למסך הבית, הכפתור הוספה מסומן" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>5. זהו!</h3>
+            <p>הסמל של צעד עשר מופיע במסך הבית ונפתח כמו כל אפליקציה, גם בלי אינטרנט.</p>
+          </div>
+          <img class="shot" src="guide/ios-5.jpg" alt="הסמל של צעד עשר במסך הבית" width="300" height="580" loading="lazy" />
+        </section>
+      </div>
+
+      <h2 id="android">הוספה למסך הבית באנדרואיד</h2>
+      <p class="note">באנדרואיד עושים את זה מתוך <strong>Chrome</strong>. לפעמים Chrome מציע לבד "התקנת אפליקציה" בתחתית המסך, ואז אפשר פשוט ללחוץ עליו.</p>
+
+      <div class="steps">
+        <section class="card step">
+          <div>
+            <h3>1. פותחים את האתר ב-Chrome</h3>
+            <p>נכנסים לכתובת של האפליקציה.</p>
+          </div>
+          <img class="shot" src="guide/android-1.jpg" alt="האפליקציה פתוחה ב-Chrome" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>2. לוחצים על שלוש הנקודות</h3>
+            <p>התפריט שבפינה העליונה, ליד שורת הכתובת.</p>
+          </div>
+          <img class="shot" src="guide/android-2.jpg" alt="כפתור התפריט מסומן" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>3. בוחרים "התקנת אפליקציה"</h3>
+            <p>בחלק מהטלפונים זה נקרא "הוספה למסך הבית".</p>
+          </div>
+          <img class="shot" src="guide/android-3.jpg" alt="בתפריט מסומן: התקנת אפליקציה" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>4. מאשרים "התקנה"</h3>
+            <p>הטלפון מוסיף את האפליקציה.</p>
+          </div>
+          <img class="shot" src="guide/android-4.jpg" alt="חלון התקנת אפליקציה, הכפתור התקנה מסומן" width="300" height="580" loading="lazy" />
+        </section>
+        <section class="card step">
+          <div>
+            <h3>5. זהו!</h3>
+            <p>הסמל של צעד עשר מופיע במסך הבית או ברשימת האפליקציות.</p>
+          </div>
+          <img class="shot" src="guide/android-5.jpg" alt="הסמל של צעד עשר במסך הבית" width="300" height="580" loading="lazy" />
+        </section>
+      </div>
+
+      <p class="muted">התמונות להמחשה בלבד. בגרסאות שונות של טלפונים המסכים עשויים להיראות קצת אחרת.</p>
+
+      <section class="card settings-block">
+        <h2>פרטיות</h2>
+        <p class="muted">אין חשבון, אין שרת ואין מעקב. התשובות נשמרות רק בטלפון שלכם ולא נשלחות לשום מקום. אם מחליפים טלפון, משתמשים ב"גיבוי לקובץ" ו"שחזור מקובץ" שבהגדרות.</p>
+      </section>
+
+      <div class="action-row">
+        <a class="primary-button" href="./">לפתיחת האפליקציה</a>
+      </div>
+    </main>
+  </body>
+</html>

@@ -356,6 +356,10 @@ p {
   font-weight: 600;
 }
 
+.setup-guide {
+  justify-self: center;
+}
+
 .setup-form {
   display: grid;
   gap: 18px;

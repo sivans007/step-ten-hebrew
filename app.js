@@ -839,6 +839,7 @@ function renderSetup() {
       <h1>צעד עשר</h1>
       <p class="lead">חשבון נפש יומי, בכמה דקות בסוף היום.</p>
       <p class="muted">כל מה שנכתב נשמר רק במכשיר הזה. אין חשבון, אין שרת ואף אחד אחר לא רואה את התשובות.</p>
+      <a class="link-button setup-guide" href="guide.html">מה יש באפליקציה ואיך מתקינים? למדריך עם תמונות</a>
       <form class="card setup-form" data-form="setup">
         <label class="field">
           <span>שם (לא חובה)</span>
@@ -868,6 +869,7 @@ function renderInstallHint() {
       <div>
         <strong>להוסיף את צעד עשר למסך הבית</strong>
         ${installSteps()}
+        <a class="link-button" href="guide.html#iphone">הסבר עם תמונות</a>
       </div>
       <button type="button" class="ghost-button small" data-action="dismiss-install">הבנתי</button>
     </section>`;
@@ -1203,6 +1205,7 @@ function renderSettings() {
     <section class="card settings-block">
       <h2>התקנה במסך הבית</h2>
       ${isStandalone() ? `<p class="muted">האפליקציה כבר מותקנת במסך הבית.</p>` : `<p class="muted">באייפון:</p>${installSteps()}<p class="muted">באנדרואיד: בתפריט של Chrome בוחרים "התקנת אפליקציה".</p>`}
+      <a class="ghost-button" href="guide.html">מדריך עם תמונות</a>
     </section>
 
     <section class="card settings-block">
