@@ -46,7 +46,6 @@ const STEP10_QUESTIONS = [
 const HEBREW_LETTERS = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "יא", "יב", "יג", "יד", "טו", "טז", "יז", "יח", "יט", "כ"];
 
 const STORAGE_KEY = "step-ten:v1";
-const INSTALL_HINT_KEY = "step-ten:install-hint-dismissed";
 const BACKUP_APP_ID = "step-ten";
 
 const app = document.getElementById("app");
@@ -107,21 +106,6 @@ function persist() {
   }
 }
 
-function readFlag(key) {
-  try {
-    return window.localStorage.getItem(key) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeFlag(key) {
-  try {
-    window.localStorage.setItem(key, "1");
-  } catch {
-    // לא קריטי
-  }
-}
 
 // ---------- עזרים ----------
 
@@ -771,24 +755,6 @@ function greeting() {
   return personName() ? `${part}, ${personName()}` : part;
 }
 
-// ---------- התקנה ----------
-
-function isIos() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-
-function isStandalone() {
-  return window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
-}
-
-function installSteps() {
-  return `
-    <ol class="install-steps">
-      <li>${t("פתח", "פתחי")} את הדף ב-Safari.</li>
-      <li>${t("לחץ", "לחצי")} על כפתור השיתוף <span class="share-glyph" aria-hidden="true">⬆︎</span> בתחתית המסך.</li>
-      <li>${t("בחר", "בחרי")} "הוספה למסך הבית" ואז "הוספה".</li>
-    </ol>`;
-}
 
 // ---------- ציור ----------
 
@@ -837,9 +803,6 @@ function renderSetup() {
     <section class="setup">
       <img class="setup-icon" src="icons/icon.svg" alt="" width="72" height="72" />
       <h1>צעד עשר</h1>
-      <p class="lead">חשבון נפש יומי, בכמה דקות בסוף היום.</p>
-      <p class="muted">כל מה שנכתב נשמר רק במכשיר הזה. אין חשבון, אין שרת ואף אחד אחר לא רואה את התשובות.</p>
-      <a class="link-button setup-guide" href="guide.html">מה יש באפליקציה ואיך מתקינים? למדריך עם תמונות</a>
       <form class="card setup-form" data-form="setup">
         <label class="field">
           <span>שם (לא חובה)</span>
@@ -855,25 +818,12 @@ function renderSetup() {
         <label class="field">
           <span>תאריך ניקיון</span>
           <input class="text-input date-input" type="date" name="cleanDate" max="${today()}" value="${escapeHtml(data.profile.cleanDate || "")}" />
-          <small class="muted">כדי לראות את הזמן הנקי ולקבל ברכה בימים מיוחדים. אפשר להשאיר ריק ולהוסיף אחר כך.</small>
         </label>
         <button type="submit" class="primary-button wide">התחלה</button>
       </form>
     </section>`;
 }
 
-function renderInstallHint() {
-  if (!isIos() || isStandalone() || readFlag(INSTALL_HINT_KEY)) return "";
-  return `
-    <section class="card install-hint">
-      <div>
-        <strong>להוסיף את צעד עשר למסך הבית</strong>
-        ${installSteps()}
-        <a class="link-button" href="guide.html#iphone">הסבר עם תמונות</a>
-      </div>
-      <button type="button" class="ghost-button small" data-action="dismiss-install">הבנתי</button>
-    </section>`;
-}
 
 function renderToday() {
   const entry = getActiveEntry();
@@ -901,7 +851,6 @@ function renderToday() {
     <section class="card question-card">
       <h2 class="question-title">חשבון נפש יומי ואסירות תודה</h2>
       <textarea class="answer-area" data-field="free-text" rows="4" placeholder="${t("כתוב כאן בחופשיות", "כתבי כאן בחופשיות")}">${escapeHtml(entry.freeText || "")}</textarea>
-      ${dictationHint()}
     </section>
     ${
       lastSingle
@@ -926,7 +875,6 @@ function renderTodayStart() {
     completed: "סיימת את צעד עשר של היום. כל הכבוד!"
   }[status];
   return `
-    ${renderInstallHint()}
     <section class="card hero">
       <p class="muted">${escapeHtml(formatLongDate(today()))}</p>
       <h1>${escapeHtml(greeting())}</h1>
@@ -943,9 +891,6 @@ function renderTodayStart() {
     </section>`;
 }
 
-function dictationHint() {
-  return `<p class="dictation-hint">אפשר גם להכתיב: ${t("לחץ", "לחצי")} על סמל המיקרופון 🎤 במקלדת של האייפון ${t("ודבר", "ודברי")}.</p>`;
-}
 
 function questionView(entry, question) {
   const answer = entry.answers?.[question.id]?.text || "";
@@ -957,8 +902,7 @@ function questionView(entry, question) {
         <button type="button" class="ghost-button tiny" data-action="hide-question" data-question-id="${escapeHtml(question.id)}" aria-label="הסתרת שאלה ${escapeHtml(question.label)}">הסתרה</button>
       </span>
     </div>
-    <textarea class="answer-area" rows="2" data-question-id="${escapeHtml(question.id)}" aria-labelledby="q-${escapeHtml(question.id)}" placeholder="${t("כתוב כאן", "כתבי כאן")}">${escapeHtml(answer)}</textarea>
-    ${dictationHint()}`;
+    <textarea class="answer-area" rows="2" data-question-id="${escapeHtml(question.id)}" aria-labelledby="q-${escapeHtml(question.id)}" placeholder="${t("כתוב כאן", "כתבי כאן")}">${escapeHtml(answer)}</textarea>`;
 }
 
 function renderSingleQuestion(entry, questions) {
@@ -1172,7 +1116,6 @@ function renderSettings() {
         <label class="field">
           <span>תאריך ניקיון</span>
           <input class="text-input date-input" type="date" name="cleanDate" max="${today()}" value="${escapeHtml(data.profile.cleanDate || "")}" />
-          <small class="muted">כדי לראות את הזמן הנקי ולקבל ברכה בימים מיוחדים.</small>
         </label>
         <button type="submit" class="primary-button">שמירה</button>
       </form>
@@ -1180,7 +1123,6 @@ function renderSettings() {
 
     <section class="card settings-block">
       <h2>תזכורת יומית ביומן</h2>
-      <p class="muted">${t("בחר", "בחרי")} שעה, ${t("הורד", "הורידי")} את הקובץ ו${t("פתח", "פתחי")} אותו. ביומן של הטלפון ייווצר אירוע יומי עם התראה.</p>
       <div class="inline-form">
         <label class="field compact">
           <span>שעה</span>
@@ -1192,7 +1134,6 @@ function renderSettings() {
 
     <section class="card settings-block">
       <h2>גיבוי ושחזור</h2>
-      <p class="muted">הכול שמור רק במכשיר הזה. אם הדפדפן יימחק או ${t("שתחליף", "שתחליפי")} טלפון, הנתונים ילכו. כדאי לגבות לקובץ מדי פעם ולשמור אותו במקום בטוח.</p>
       <div class="action-row">
         <button type="button" class="primary-button" data-action="backup">גיבוי לקובץ</button>
         <label class="ghost-button file-button">
@@ -1203,14 +1144,7 @@ function renderSettings() {
     </section>
 
     <section class="card settings-block">
-      <h2>התקנה במסך הבית</h2>
-      ${isStandalone() ? `<p class="muted">האפליקציה כבר מותקנת במסך הבית.</p>` : `<p class="muted">באייפון:</p>${installSteps()}<p class="muted">באנדרואיד: בתפריט של Chrome בוחרים "התקנת אפליקציה".</p>`}
-      <a class="ghost-button" href="guide.html">מדריך עם תמונות</a>
-    </section>
-
-    <section class="card settings-block">
-      <h2>פרטיות</h2>
-      <p class="muted">אין חשבון, אין שרת ואין מעקב. התשובות לא יוצאות מהמכשיר, חוץ מקובץ גיבוי ${t("שאתה מוריד", "שאת מורידה")} בעצמך.</p>
+      <h2>נתונים</h2>
       <button type="button" class="danger-button" data-action="wipe">מחיקת כל הנתונים מהמכשיר</button>
     </section>`;
 }
@@ -1332,10 +1266,6 @@ document.addEventListener("click", (event) => {
     "download-ics": () => downloadReminder(),
     backup: () => backupToFile(),
     "dismiss-milestone": () => dismissMilestone(),
-    "dismiss-install": () => {
-      writeFlag(INSTALL_HINT_KEY);
-      render();
-    },
     wipe: () => {
       if (!window.confirm(t("למחוק את כל הרשומות וההגדרות מהמכשיר? כדאי שתגבה לקובץ קודם. אי אפשר לבטל את זה.", "למחוק את כל הרשומות וההגדרות מהמכשיר? כדאי שתגבי לקובץ קודם. אי אפשר לבטל את זה."))) return;
       data = emptyData();

@@ -34,16 +34,13 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   assert(!(await page.isVisible(".celebrate")), "no milestone on a regular day");
   assert((await page.getAttribute("a.quick-card:has-text('רק להיום')", "href")) === "https://www.naisrael.org.il/just-for-today/", "just for today link");
   assert((await page.getAttribute("a.quick-card:has-text('לוח פגישות')", "href")) === "https://www.naisrael.org.il/meetings/", "meetings link");
-  assert(await page.isVisible(".install-hint"), "iPhone install hint shown");
   await page.screenshot({ path: `${SP}/1-home.png`, fullPage: true });
-  await page.click("[data-action=dismiss-install]");
-  assert(!(await page.isVisible(".install-hint")), "install hint dismissed");
+  assert((await page.locator("a[href*='guide']").count()) === 0, "no guide links inside the app");
 
   // answer
   await page.click("[data-action=open-today]");
   const first = page.locator("textarea[data-question-id=d1]");
   assert((await page.textContent("#q-d1")).includes("נקייה"), "feminine wording");
-  assert(await page.isVisible(".dictation-hint"), "dictation hint shown");
   assert((await page.locator("[data-action^=record]").count()) === 0, "no record button");
   await first.fill("כן, נקייה היום");
   await page.locator("textarea[data-question-id=d4]").fill("תשובה רביעית");

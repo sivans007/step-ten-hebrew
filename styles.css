@@ -356,9 +356,6 @@ p {
   font-weight: 600;
 }
 
-.setup-guide {
-  justify-self: center;
-}
 
 .setup-form {
   display: grid;
@@ -421,27 +418,8 @@ p {
   color: var(--amber);
 }
 
-.install-hint {
-  display: grid;
-  gap: 10px;
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-}
 
-.install-steps {
-  margin: 6px 0 0;
-  padding-inline-start: 20px;
-  display: grid;
-  gap: 4px;
-}
 
-.share-glyph {
-  display: inline-block;
-  padding: 0 4px;
-  border: 1px solid var(--accent-line);
-  border-radius: 6px;
-  font-size: 0.85em;
-}
 
 .entry-header {
   display: grid;
@@ -512,10 +490,6 @@ p {
   flex-shrink: 0;
 }
 
-.dictation-hint {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
 
 .add-question {
   min-height: 48px;
