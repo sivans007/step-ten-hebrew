@@ -61,7 +61,8 @@ const state = {
   showHidden: false,
   dialog: null,
   calendarOffset: 0,
-  calendarSelected: null
+  calendarSelected: null,
+  journalId: null
 };
 
 // ---------- אחסון ----------
@@ -70,7 +71,7 @@ let data = null;
 let storageWorks = true;
 
 function emptyData() {
-  return { version: 1, profile: { name: "", gender: "", cleanDate: "", setupDone: false, reminderTime: "21:00", seenMilestones: [] }, rules: [], entries: [] };
+  return { version: 1, profile: { name: "", gender: "", cleanDate: "", setupDone: false, reminderTime: "21:00", seenMilestones: [] }, rules: [], entries: [], journal: [] };
 }
 
 function normalizeData(raw) {
@@ -80,7 +81,8 @@ function normalizeData(raw) {
     version: 1,
     profile: { ...base.profile, ...(raw.profile && typeof raw.profile === "object" ? raw.profile : {}) },
     rules: Array.isArray(raw.rules) ? raw.rules.filter((rule) => rule && typeof rule === "object") : [],
-    entries: Array.isArray(raw.entries) ? raw.entries.filter((entry) => entry && typeof entry.entryDate === "string") : []
+    entries: Array.isArray(raw.entries) ? raw.entries.filter((entry) => entry && typeof entry.entryDate === "string") : [],
+    journal: Array.isArray(raw.journal) ? raw.journal.filter((note) => note && typeof note.id === "string" && typeof note.text === "string" && typeof note.createdAt === "string") : []
   };
 }
 
@@ -390,6 +392,116 @@ function deleteEntry(date) {
   go("history");
 }
 
+// ---------- מחשבות ותפילות: יומן אישי חופשי ----------
+
+function findNote(id) {
+  return data.journal.find((note) => note.id === id) || null;
+}
+
+function noteDate(note) {
+  return dateKey(new Date(note.createdAt));
+}
+
+function noteTime(note) {
+  const date = new Date(note.createdAt);
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function sortedNotes() {
+  return [...data.journal].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+function newNote() {
+  saveAll();
+  const now = new Date().toISOString();
+  const note = { id: uid("note"), createdAt: now, updatedAt: now, text: "" };
+  data.journal.push(note);
+  persist();
+  state.journalId = note.id;
+  go("journal");
+  app.querySelector('[data-field="journal-text"]')?.focus();
+}
+
+function openNote(id) {
+  saveAll();
+  state.journalId = id;
+  go("journal");
+}
+
+// שמירה של מה שכתוב כרגע ביומן. לא מצייר מחדש, כדי לא לאבד את הפוקוס.
+function saveJournalFromForm() {
+  const area = app.querySelector('textarea[data-field="journal-text"]');
+  const note = area ? findNote(area.dataset.noteId) : null;
+  if (!note || area.value === note.text) return;
+  note.text = area.value;
+  note.updatedAt = new Date().toISOString();
+  if (!persist()) return;
+  const status = app.querySelector("[data-journal-status]");
+  if (status) {
+    status.textContent = "נשמר ✓";
+    window.clearTimeout(saveJournalFromForm.timer);
+    saveJournalFromForm.timer = window.setTimeout(() => {
+      const current = app.querySelector("[data-journal-status]");
+      if (current) current.textContent = "";
+    }, 1800);
+  }
+}
+
+const journalAutosave = debounce(saveJournalFromForm, 400);
+
+function saveAll() {
+  saveFromForm();
+  saveJournalFromForm();
+}
+
+// כתיבה שנפתחה ונשארה ריקה לא נשמרת ברשימה.
+function pruneEmptyNotes() {
+  const before = data.journal.length;
+  data.journal = data.journal.filter((note) => note.text.trim() || note.id === state.journalId);
+  if (data.journal.length !== before) persist();
+}
+
+function closeNote() {
+  saveAll();
+  state.journalId = null;
+  pruneEmptyNotes();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function deleteNote(id) {
+  const note = findNote(id);
+  if (!note) return;
+  if (note.text.trim() && !window.confirm(`${t("בטוח שאתה רוצה", "בטוחה שאת רוצה")} למחוק את הכתיבה הזו? אי אפשר לבטל את זה.`)) return;
+  data.journal = data.journal.filter((item) => item.id !== id);
+  persist();
+  state.journalId = null;
+  showToast("הכתיבה נמחקה");
+  render();
+  window.scrollTo(0, 0);
+}
+
+function printNote(id) {
+  saveAll();
+  const note = findNote(id);
+  if (!note) return;
+  const name = personName();
+  printRoot.innerHTML = `
+    <article class="print-sheet">
+      <h1>מחשבות ותפילות</h1>
+      <p class="print-meta">${escapeHtml(formatLongDate(noteDate(note)))} · ${escapeHtml(noteTime(note))}${name ? ` · ${escapeHtml(name)}` : ""}</p>
+      <section class="print-item"><p class="print-answer">${escapeHtml(note.text)}</p></section>
+    </article>`;
+  const previousTitle = document.title;
+  document.title = `מחשבות ותפילות ${noteDate(note)}`;
+  const restore = () => {
+    document.title = previousTitle;
+    window.removeEventListener("afterprint", restore);
+  };
+  window.addEventListener("afterprint", restore);
+  window.print();
+}
+
 // ---------- חלון שינוי שאלה ----------
 
 function openDialog(kind, questionId = null) {
@@ -571,7 +683,7 @@ function downloadReminder() {
 // ---------- גיבוי ושחזור ----------
 
 function backupToFile() {
-  saveFromForm();
+  saveAll();
   const payload = { app: BACKUP_APP_ID, version: 1, exportedAt: new Date().toISOString(), data };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   downloadBlob(blob, `step-ten-backup-${today()}.json`);
@@ -672,14 +784,32 @@ function cleanTimeInfo() {
   return { ...parts, from, detail: joinHebrew(detail) };
 }
 
+// הכותרת הגדולה של הזמן הנקי: משנה ומעלה מוצגות השנים, ולפני כן הימים.
+function cleanHeadline(info) {
+  const clean = t("נקי", "נקייה");
+  if (info.years) return `${info.years === 1 ? "שנה" : yearsWord(info.years)} ${clean}`;
+  if (info.totalDays === 0) return `היום הראשון ${clean}. ${t("ברוך הבא", "ברוכה הבאה")}!`;
+  return `${daysWord(info.totalDays)} ${clean}`;
+}
+
 function renderCleanTime() {
   const info = cleanTimeInfo();
   if (!info) return "";
-  const clean = t("נקי", "נקייה");
-  const headline = info.totalDays === 0 ? `היום הראשון ${clean}. ${t("ברוך הבא", "ברוכה הבאה")}!` : `${info.totalDays.toLocaleString("he-IL")} ימים ${clean}`;
+  const totalDays = `${info.totalDays.toLocaleString("he-IL")} ימים`;
+  if (info.years) {
+    const rest = [];
+    if (info.months) rest.push(monthsWord(info.months));
+    if (info.days) rest.push(daysWord(info.days));
+    return `
+    <section class="card clean-time" aria-label="זמן נקי">
+      <p class="clean-days clean-years">${escapeHtml(cleanHeadline(info))}</p>
+      ${rest.length ? `<p class="clean-detail">ועוד ${escapeHtml(joinHebrew(rest))}</p>` : ""}
+      <p class="muted">${escapeHtml(totalDays)} · מאז ${escapeHtml(formatDate(info.from))}</p>
+    </section>`;
+  }
   return `
     <section class="card clean-time" aria-label="זמן נקי">
-      <p class="clean-days">${escapeHtml(info.totalDays === 1 ? `יום אחד ${clean}` : headline)}</p>
+      <p class="clean-days">${escapeHtml(cleanHeadline(info))}</p>
       ${info.totalDays >= 30 ? `<p class="clean-detail">${escapeHtml(info.detail)}</p>` : ""}
       <p class="muted">מאז ${escapeHtml(formatDate(info.from))}</p>
     </section>`;
@@ -760,6 +890,9 @@ function greeting() {
 
 function go(view) {
   if (state.view === "today" && view !== "today") saveFromForm();
+  saveJournalFromForm();
+  if (view !== "journal") state.journalId = null;
+  pruneEmptyNotes();
   state.view = view;
   state.dialog = null;
   render();
@@ -772,7 +905,7 @@ function render() {
     app.innerHTML = renderSetup();
     return;
   }
-  const views = { today: renderToday, history: renderHistory, calendar: renderCalendar, settings: renderSettings };
+  const views = { today: renderToday, journal: renderJournal, history: renderHistory, calendar: renderCalendar, settings: renderSettings };
   app.innerHTML = `${storageWorks ? "" : `<p class="warning">הדפדפן לא מאפשר שמירה במכשיר. מה שנכתב יימחק כשהדף ייסגר. אפשר לגבות לקובץ בהגדרות.</p>`}${(views[state.view] || renderToday)()}${renderMilestone()}`;
   renderNav();
   app.querySelectorAll("textarea.answer-area").forEach(autoGrow);
@@ -781,7 +914,9 @@ function render() {
 function renderNav() {
   nav.hidden = false;
   const items = [
-    ["today", "היום", "M4 5h16v14H4z M8 3v4 M16 3v4 M4 10h16"],
+    // ציור של בית: גג, קירות, ארובה, חלון ודלת.
+    ["today", "בית", "M2.5 11 12 3.5l9.5 7.5 M5 9v11.5h14V9 M16 6.66V4h2.5v4.63 M7.5 12.5h3v3h-3z M13.5 20.5v-5.5h3v5.5"],
+    ["journal", "מחשבות", "M4 20h4L19 9l-4-4L4 16v4z M13.5 6.5l4 4 M12 20h8"],
     ["history", "היסטוריה", "M12 7v5l3 2 M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["calendar", "לוח שנה", "M4 5h16v14H4z M4 10h16 M9 14h2 M13 14h2 M9 17h2"],
     ["settings", "הגדרות", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19 12h2 M3 12h2 M12 3v2 M12 19v2 M17 7l1.5-1.5 M5.5 18.5L7 17 M17 17l1.5 1.5 M5.5 5.5L7 7"]
@@ -837,7 +972,7 @@ function renderToday() {
     <header class="entry-header card">
       <div class="entry-header-top">
         <div>
-          <p class="muted">${isToday ? "היום" : "רשומה קודמת"}${isToday && cleanTimeInfo() ? ` · ${escapeHtml(cleanTimeInfo().totalDays.toLocaleString("he-IL"))} ימים ${t("נקי", "נקייה")}` : ""}</p>
+          <p class="muted">${isToday ? "היום" : "רשומה קודמת"}${isToday && cleanTimeInfo()?.totalDays ? ` · ${escapeHtml(cleanHeadline(cleanTimeInfo()))}` : ""}</p>
           <h1>${escapeHtml(formatLongDate(entry.entryDate))}</h1>
         </div>
         <button type="button" class="ghost-button small" data-action="toggle-mode">${state.mode === "single" ? "כל השאלות" : "שאלה אחת"}</button>
@@ -884,6 +1019,7 @@ function renderTodayStart() {
     </section>
     ${renderCleanTime()}
     <section class="quick-grid">
+      <button type="button" class="card quick-card quick-journal" data-nav="journal"><strong>מחשבות ותפילות</strong><span>יומן אישי</span></button>
       <button type="button" class="card quick-card" data-nav="history"><strong>היסטוריה</strong><span>רשומות קודמות</span></button>
       <button type="button" class="card quick-card" data-nav="calendar"><strong>לוח שנה</strong><span>מבט חודשי</span></button>
       <a class="card quick-card" href="https://www.naisrael.org.il/just-for-today/" target="_blank" rel="noopener noreferrer"><strong>רק להיום</strong><span>קריאה יומית באתר NA</span></a>
@@ -983,6 +1119,66 @@ function renderDialog(entry) {
         <button type="button" class="primary-button" data-action="confirm-dialog">אישור</button>
         <button type="button" class="ghost-button" data-action="cancel-dialog">ביטול</button>
       </div>
+    </section>`;
+}
+
+function renderJournal() {
+  const note = state.journalId ? findNote(state.journalId) : null;
+  return note ? renderNote(note) : renderJournalList();
+}
+
+function renderJournalList() {
+  const notes = sortedNotes().filter((note) => note.text.trim());
+  const groups = [];
+  for (const note of notes) {
+    const label = new Date(note.createdAt).toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.notes.push(note);
+    else groups.push({ label, notes: [note] });
+  }
+  return `
+    <h1 class="page-title">מחשבות ותפילות</h1>
+    <button type="button" class="primary-button wide" data-action="journal-new">+ כתיבה חדשה</button>
+    ${
+      notes.length
+        ? groups
+            .map(
+              (group) => `
+      <h2 class="group-label">${escapeHtml(group.label)}</h2>
+      <section class="history-group">
+        ${group.notes
+          .map((note) => {
+            const text = note.text.trim().replace(/\s+/g, " ");
+            return `
+          <button type="button" class="card journal-item" data-action="journal-open" data-note-id="${escapeHtml(note.id)}">
+            <span class="journal-item-date">${escapeHtml(formatDate(noteDate(note)))} · ${escapeHtml(noteTime(note))}</span>
+            <span class="journal-item-text">${escapeHtml(text.length > 160 ? `${text.slice(0, 160)}...` : text)}</span>
+          </button>`;
+          })
+          .join("")}
+      </section>`
+            )
+            .join("")
+        : `<section class="card empty-state"><p class="muted">עוד לא נכתב כאן כלום.</p></section>`
+    }`;
+}
+
+function renderNote(note) {
+  return `
+    <header class="card journal-head">
+      <p class="muted">מחשבות ותפילות</p>
+      <h1>${escapeHtml(formatLongDate(noteDate(note)))}</h1>
+      <p class="muted">${escapeHtml(noteTime(note))} <span class="autosave" data-journal-status></span></p>
+    </header>
+    <section class="card journal-card">
+      <textarea class="answer-area journal-area" data-field="journal-text" data-note-id="${escapeHtml(note.id)}" rows="10" aria-label="מחשבות ותפילות" placeholder="${t("כתוב כאן בחופשיות", "כתבי כאן בחופשיות")}">${escapeHtml(note.text)}</textarea>
+    </section>
+    <section class="action-row">
+      <button type="button" class="primary-button" data-action="journal-close">סיום</button>
+      <button type="button" class="ghost-button" data-action="journal-print" data-note-id="${escapeHtml(note.id)}">הדפסה / שמירה כ-PDF</button>
+    </section>
+    <section class="danger-zone">
+      <button type="button" class="danger-button" data-action="journal-delete" data-note-id="${escapeHtml(note.id)}">מחיקת הכתיבה הזו</button>
     </section>`;
 }
 
@@ -1150,8 +1346,9 @@ function renderSettings() {
 }
 
 function autoGrow(area) {
+  const share = area.classList.contains("journal-area") ? 0.7 : 0.5;
   area.style.height = "auto";
-  area.style.height = `${Math.min(area.scrollHeight + 2, Math.max(window.innerHeight * 0.5, 160))}px`;
+  area.style.height = `${Math.min(area.scrollHeight + 2, Math.max(window.innerHeight * share, 160))}px`;
 }
 
 // ---------- אירועים ----------
@@ -1160,6 +1357,7 @@ app.addEventListener("input", (event) => {
   const target = event.target;
   if (target.matches("textarea.answer-area")) autoGrow(target);
   if (target.matches("textarea[data-question-id], textarea[data-field='free-text']")) autosave();
+  if (target.matches("textarea[data-field='journal-text']")) journalAutosave();
 });
 
 app.addEventListener("change", (event) => {
@@ -1199,7 +1397,9 @@ app.addEventListener("submit", (event) => {
 document.addEventListener("click", (event) => {
   const navButton = event.target.closest("[data-nav]");
   if (navButton) {
+    saveAll();
     if (navButton.dataset.nav === "today") state.activeDate = null;
+    if (navButton.dataset.nav === "journal") state.journalId = null;
     go(navButton.dataset.nav);
     return;
   }
@@ -1208,7 +1408,13 @@ document.addEventListener("click", (event) => {
   const action = button.dataset.action;
   const date = button.dataset.date;
   const questionId = button.dataset.questionId;
+  const noteId = button.dataset.noteId;
   const handlers = {
+    "journal-new": () => newNote(),
+    "journal-open": () => openNote(noteId),
+    "journal-close": () => closeNote(),
+    "journal-print": () => printNote(noteId),
+    "journal-delete": () => deleteNote(noteId),
     "open-today": () => openDate(today()),
     "open-date": () => openDate(date),
     "toggle-mode": () => {
@@ -1271,6 +1477,7 @@ document.addEventListener("click", (event) => {
       data = emptyData();
       persist();
       state.activeDate = null;
+      state.journalId = null;
       state.view = "today";
       render();
     }
@@ -1287,9 +1494,9 @@ document.addEventListener("keydown", (event) => {
 
 // שמירה לפני שהדף נסגר או עובר לרקע.
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") saveFromForm();
+  if (document.visibilityState === "hidden") saveAll();
 });
-window.addEventListener("pagehide", saveFromForm);
+window.addEventListener("pagehide", saveAll);
 
 // ---------- הפעלה ----------
 

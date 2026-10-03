@@ -14,7 +14,7 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => { if (m.type() === "error" && !/ERR_CERT|ERR_FAILED|ERR_INTERNET/.test(m.text())) errors.push(m.text()); });
+  page.on("console", (m) => { if (m.type() === "error" && !/ERR_CERT|ERR_FAILED|ERR_INTERNET|ERR_TUNNEL/.test(m.text())) errors.push(m.text()); });
   page.on("dialog", (d) => d.accept());
   await page.goto(URL);
 
@@ -113,6 +113,39 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   assert(await page.isVisible(".calendar-day-panel"), "calendar day panel");
   await page.screenshot({ path: `${SP}/6-calendar.png`, fullPage: true });
 
+  // house button and journal
+  assert((await page.textContent("[data-nav=today]")).trim() === "בית", "home nav button is a house");
+  assert((await page.locator("#nav .nav-item").count()) === 5, "five nav items");
+  await page.click("[data-nav=today]");
+  assert(await page.isVisible(".quick-journal"), "journal card on home");
+  await page.click(".quick-journal");
+  assert((await page.textContent("h1")).includes("מחשבות ותפילות"), "journal page title");
+  assert(await page.isVisible(".empty-state"), "journal empty state");
+  await page.click("[data-action=journal-new]");
+  assert(await page.isVisible("textarea[data-field=journal-text]"), "journal editor open");
+  await page.click("[data-nav=journal]");
+  assert((await page.locator(".journal-item").count()) === 0, "empty note is not kept");
+  await page.click("[data-action=journal-new]");
+  await page.fill("textarea[data-field=journal-text]", "אלוהים, תן לי את השלווה\nלקבל את מה שאין ביכולתי לשנות");
+  await page.waitForTimeout(700);
+  assert((await page.textContent("[data-journal-status]")).includes("נשמר"), "journal autosave indicator");
+  await page.screenshot({ path: `${SP}/10-journal-edit.png` });
+  await page.reload();
+  await page.click("[data-nav=journal]");
+  assert((await page.locator(".journal-item").count()) === 1, "journal note persists after reload");
+  assert((await page.textContent(".journal-item")).includes("השלווה"), "journal preview text");
+  await page.screenshot({ path: `${SP}/11-journal-list.png`, fullPage: true });
+  await page.click(".journal-item");
+  assert((await page.inputValue("textarea[data-field=journal-text]")).includes("לקבל את מה"), "journal note opens");
+  await page.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; }; });
+  await page.click("[data-action=journal-print]");
+  assert((await page.evaluate(() => window.__printed)) === 1 && (await page.textContent("#print-root")).includes("השלווה"), "journal print");
+  await page.click("[data-action=journal-close]");
+  await page.click("[data-action=journal-new]");
+  await page.fill("textarea[data-field=journal-text]", "כתיבה למחיקה");
+  await page.click("[data-action=journal-delete]");
+  assert((await page.locator(".journal-item").count()) === 1, "journal note deleted");
+
   // ics
   await page.click("[data-nav=settings]");
   await page.fill("[data-field=reminder-time]", "21:30");
@@ -129,7 +162,7 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   const backupPath = `${SP}/backup.json`;
   await backup.saveAs(backupPath);
   const json = JSON.parse(fs.readFileSync(backupPath, "utf8"));
-  assert(json.app === "step-ten" && json.data.entries.length === 1, "backup json content");
+  assert(json.app === "step-ten" && json.data.entries.length === 1 && json.data.journal.length === 1, "backup json content (with journal)");
   await page.click("[data-action=wipe]");
   assert(await page.isVisible("form[data-form=setup]"), "wipe returns to setup");
   await page.click("label:has(input[value=male])");
@@ -142,6 +175,8 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   await page.click("[data-action=open-date]");
   assert((await page.inputValue("textarea[data-question-id=d1]")) === "כן, נקייה היום", "restored answer");
   assert((await page.textContent("#q-d1")).includes("נקייה"), "restored profile gender");
+  await page.click("[data-nav=journal]");
+  assert((await page.locator(".journal-item").count()) === 1, "restore brings journal back");
 
   // bad restore file rejected
   fs.writeFileSync(`${SP}/bad.json`, '{"hello":1}');
@@ -151,7 +186,7 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   assert((await page.textContent("#toast")).includes("לא קובץ גיבוי"), "invalid backup rejected");
 
   // layout checks at 360px across views
-  for (const view of ["today", "history", "calendar", "settings"]) {
+  for (const view of ["today", "journal", "history", "calendar", "settings"]) {
     await page.click(`[data-nav=${view}]`);
     if (view === "today") await page.click("[data-action=open-today]");
     const sw = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -221,9 +256,35 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   await page.click("form[data-form=profile] button[type=submit]");
   await page.click("[data-nav=today]");
   assert((await page.textContent(".clean-days")) === "45 ימים נקי", "male wording on home");
+  // years shown big after a year
+  await page.click("[data-nav=settings]");
+  const longAgo = new Date(); longAgo.setFullYear(longAgo.getFullYear() - 13); longAgo.setMonth(longAgo.getMonth() - 3); longAgo.setDate(longAgo.getDate() - 7);
+  await page.fill("input[name=cleanDate]", key(longAgo));
+  await page.click("form[data-form=profile] button[type=submit]");
+  await page.click("[data-nav=today]");
+  assert((await page.textContent(".clean-days")) === "13 שנים נקי", "years shown big: " + (await page.textContent(".clean-days")));
+  assert((await page.textContent(".clean-detail")).startsWith("ועוד 3 חודשים"), "remainder under the years: " + (await page.textContent(".clean-detail")));
+  assert((await page.textContent(".clean-time .muted")).includes("ימים · מאז"), "total days in small print");
+  await page.click("[data-nav=settings]");
+  await page.click("label:has(input[value=female])");
+  await page.fill("input[name=cleanDate]", isoYearsAgo(2));
+  await page.click("form[data-form=profile] button[type=submit]");
+  await page.click("[data-nav=today]");
+  if (await page.isVisible(".celebrate")) await page.click(".celebrate [data-action=dismiss-milestone]");
+  assert((await page.textContent(".clean-days")) === "שנתיים נקייה", "two years wording");
+  assert((await page.locator(".clean-detail").count()) === 0, "no remainder on an exact anniversary");
 
-  // dark mode screenshot
+  // dark mode screenshots
   await page.emulateMedia({ colorScheme: "dark" });
+  await page.click("[data-nav=settings]");
+  await page.fill("input[name=cleanDate]", key(longAgo));
+  await page.click("form[data-form=profile] button[type=submit]");
+  await page.click("[data-nav=today]");
+  await page.screenshot({ path: `${SP}/8-dark-home.png` });
+  await page.click("[data-nav=journal]");
+  await page.click(".journal-item");
+  await page.screenshot({ path: `${SP}/8-dark-journal.png` });
+  await page.click("[data-nav=today]");
   await page.click("[data-action=open-today]");
   await page.screenshot({ path: `${SP}/8-dark.png` });
 
