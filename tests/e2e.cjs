@@ -6,6 +6,7 @@ const URL = "http://localhost:8765/";
 const pad = (n) => String(n).padStart(2, "0");
 const key = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const isoDaysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return key(d); };
+const norm = (text) => String(text).replace(/\u00a0/g, " ").replace(/\u2060/g, "");
 const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 (async () => {
   const browser = await chromium.launch();
@@ -28,8 +29,10 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   await page.click("button[type=submit]");
   assert(await page.isVisible("#nav"), "nav visible after setup");
   assert((await page.textContent("h1")).includes("דנה"), "greeting with name");
-  assert((await page.textContent(".clean-days")) === "45 ימים נקייה", "clean days, feminine");
-  assert((await page.textContent(".clean-detail")) .startsWith("חודש אחד ו-"), "clean time breakdown " + (await page.textContent(".clean-detail")));
+  assert((await page.textContent(".clean-number")) === "45" && (await page.textContent(".clean-unit")) === "ימים", "clean days in the ring");
+  assert((await page.textContent(".clean-kicker")) === "רק להיום אני נקייה", "clean kicker, feminine");
+  assert(norm(await page.textContent(".clean-next")) === "15 ימים ל-60 ימים", "days to next milestone: " + norm(await page.textContent(".clean-next")));
+  assert(norm(await page.textContent(".clean-detail")) .startsWith("חודש אחד ו-"), "clean time breakdown " + norm(await page.textContent(".clean-detail")));
   assert((await page.textContent(".hero")).includes("מוכנה"), "home text gendered");
   assert(!(await page.isVisible(".celebrate")), "no milestone on a regular day");
   assert((await page.getAttribute("a.quick-card:has-text('רק להיום')", "href")) === "https://www.naisrael.org.il/just-for-today/", "just for today link");
@@ -255,24 +258,27 @@ const isoYearsAgo = (n) => { const d = new Date(); return `${d.getFullYear() - n
   await page.fill("input[name=cleanDate]", isoDaysAgo(45));
   await page.click("form[data-form=profile] button[type=submit]");
   await page.click("[data-nav=today]");
-  assert((await page.textContent(".clean-days")) === "45 ימים נקי", "male wording on home");
+  assert((await page.textContent(".clean-kicker")) === "רק להיום אני נקי", "male wording on home");
   // years shown big after a year
   await page.click("[data-nav=settings]");
   const longAgo = new Date(); longAgo.setFullYear(longAgo.getFullYear() - 13); longAgo.setMonth(longAgo.getMonth() - 3); longAgo.setDate(longAgo.getDate() - 7);
   await page.fill("input[name=cleanDate]", key(longAgo));
   await page.click("form[data-form=profile] button[type=submit]");
   await page.click("[data-nav=today]");
-  assert((await page.textContent(".clean-days")) === "13 שנים נקי", "years shown big: " + (await page.textContent(".clean-days")));
-  assert((await page.textContent(".clean-detail")).startsWith("ועוד 3 חודשים"), "remainder under the years: " + (await page.textContent(".clean-detail")));
-  assert((await page.textContent(".clean-time .muted")).includes("ימים · מאז"), "total days in small print");
+  assert((await page.textContent(".clean-number")) === "13" && (await page.textContent(".clean-unit")) === "שנים", "years shown big in the ring");
+  assert(norm(await page.textContent(".clean-detail")) === "ו-3 חודשים ו-7 ימים", "remainder next to the years: " + norm(await page.textContent(".clean-detail")));
+  assert(/^\d+ ימים ל-14 שנים$/.test(norm(await page.textContent(".clean-next"))), "days to the next year: " + norm(await page.textContent(".clean-next")));
+  assert((await page.textContent(".clean-since")).startsWith("מאז "), "since date");
+  const ring = await page.evaluate(() => { const c = document.querySelector(".ring-fill"); return Number(c.getAttribute("stroke-dashoffset")) / Number(c.getAttribute("stroke-dasharray")); });
+  assert(ring > 0.6 && ring < 0.8, "ring shows about a quarter of the year: " + ring);
   await page.click("[data-nav=settings]");
   await page.click("label:has(input[value=female])");
   await page.fill("input[name=cleanDate]", isoYearsAgo(2));
   await page.click("form[data-form=profile] button[type=submit]");
   await page.click("[data-nav=today]");
   if (await page.isVisible(".celebrate")) await page.click(".celebrate [data-action=dismiss-milestone]");
-  assert((await page.textContent(".clean-days")) === "שנתיים נקייה", "two years wording");
-  assert((await page.locator(".clean-detail").count()) === 0, "no remainder on an exact anniversary");
+  assert((await page.textContent(".clean-number")) === "2" && norm(await page.textContent(".clean-detail")) === "היום בדיוק", "exact anniversary");
+  assert(/^(365|366) ימים ל-3 שנים$/.test(norm(await page.textContent(".clean-next"))), "a full year to the next one");
 
   // dark mode screenshots
   await page.emulateMedia({ colorScheme: "dark" });

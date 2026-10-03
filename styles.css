@@ -852,27 +852,87 @@ p {
 /* זמן נקי */
 
 .clean-time {
-  display: grid;
-  gap: 2px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 16px;
   border-color: var(--green-soft);
-  background: linear-gradient(135deg, var(--green-soft), var(--surface) 70%);
+  background: linear-gradient(135deg, var(--green-soft), var(--surface) 75%);
 }
 
-.clean-days {
-  font-size: 1.5rem;
+.clean-ring {
+  position: relative;
+  flex: 0 0 auto;
+  width: 118px;
+  height: 118px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.clean-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ring-track,
+.ring-fill {
+  fill: none;
+  stroke-width: 8;
+}
+
+.ring-track {
+  stroke: color-mix(in srgb, var(--green) 14%, transparent);
+}
+
+.ring-fill {
+  stroke: var(--green);
+  stroke-linecap: round;
+}
+
+.clean-number {
+  position: relative;
+  font-size: 2.9rem;
   font-weight: 800;
-  color: var(--green);
-  line-height: 1.25;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
-.clean-years {
-  font-size: 2.1rem;
-  line-height: 1.15;
+.clean-unit {
+  position: relative;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.clean-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.clean-kicker {
+  color: var(--green);
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .clean-detail {
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.clean-next,
+.clean-since {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 /* ברכת אבן דרך */

@@ -792,26 +792,80 @@ function cleanHeadline(info) {
   return `${daysWord(info.totalDays)} ${clean}`;
 }
 
+// היעד הבא של הטבעת: משנה ומעלה, השנה הבאה. לפני כן אבני הדרך: 30, 60, 90 יום, חצי שנה, 9 חודשים ושנה.
+function nextCleanTarget(info) {
+  const now = today();
+  if (info.years) {
+    const next = info.years + 1;
+    return { start: addMonths(info.from, info.years * 12), end: addMonths(info.from, next * 12), label: next === 1 ? "לשנה" : next === 2 ? "לשנתיים" : `ל-${next} שנים` };
+  }
+  const plusDays = (count) => {
+    const date = parseDate(info.from);
+    date.setDate(date.getDate() + count);
+    return dateKey(date);
+  };
+  const targets = [
+    { end: plusDays(30), label: "ל-30 ימים" },
+    { end: plusDays(60), label: "ל-60 ימים" },
+    { end: plusDays(90), label: "ל-90 ימים" },
+    { end: addMonths(info.from, 6), label: "לחצי שנה" },
+    { end: addMonths(info.from, 9), label: "ל-9 חודשים" },
+    { end: addMonths(info.from, 12), label: "לשנה" }
+  ];
+  const index = targets.findIndex((target) => target.end > now);
+  const target = targets[Math.max(index, 0)];
+  return { ...target, start: index > 0 ? targets[index - 1].end : info.from };
+}
+
+// מונע שבירת שורה בין מספר למילה שאחריו ("7 ימים") ובתוך "ו-7".
+function keepNumbersTogether(text) {
+  return text.replace(/(\d) /g, "$1\u00a0").replace(/-(?=\d)/g, "-\u2060");
+}
+
+// כרטיס הזמן הנקי: טבעת עם המספר הגדול (שנים, ובשנה הראשונה ימים) ולידה הפירוט.
 function renderCleanTime() {
   const info = cleanTimeInfo();
   if (!info) return "";
-  const totalDays = `${info.totalDays.toLocaleString("he-IL")} ימים`;
+  const clean = t("נקי", "נקייה");
+  const now = today();
+  const target = nextCleanTarget(info);
+  const span = Math.max(daysBetween(target.start, target.end), 1);
+  const progress = Math.min(Math.max(daysBetween(target.start, now) / span, 0), 1);
+  const left = daysBetween(now, target.end);
+  let number;
+  let unit;
+  let main;
   if (info.years) {
+    number = info.years;
+    unit = info.years === 1 ? "שנה" : "שנים";
     const rest = [];
     if (info.months) rest.push(monthsWord(info.months));
     if (info.days) rest.push(daysWord(info.days));
-    return `
-    <section class="card clean-time" aria-label="זמן נקי">
-      <p class="clean-days clean-years">${escapeHtml(cleanHeadline(info))}</p>
-      ${rest.length ? `<p class="clean-detail">ועוד ${escapeHtml(joinHebrew(rest))}</p>` : ""}
-      <p class="muted">${escapeHtml(totalDays)} · מאז ${escapeHtml(formatDate(info.from))}</p>
-    </section>`;
+    const joined = joinHebrew(rest);
+    main = rest.length ? `${/^\d/.test(joined) ? "ו-" : "ו"}${joined}` : "היום בדיוק";
+  } else {
+    number = info.totalDays;
+    unit = info.totalDays === 1 ? "יום" : "ימים";
+    main = info.totalDays >= 30 ? info.detail : info.totalDays === 0 ? `היום הראשון. ${t("ברוך הבא", "ברוכה הבאה")}!` : "יום אחרי יום";
   }
+  const radius = 52;
+  const length = 2 * Math.PI * radius;
   return `
     <section class="card clean-time" aria-label="זמן נקי">
-      <p class="clean-days">${escapeHtml(cleanHeadline(info))}</p>
-      ${info.totalDays >= 30 ? `<p class="clean-detail">${escapeHtml(info.detail)}</p>` : ""}
-      <p class="muted">מאז ${escapeHtml(formatDate(info.from))}</p>
+      <div class="clean-ring" role="img" aria-label="${escapeHtml(cleanHeadline(info))}">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="${radius}" />
+          <circle class="ring-fill" cx="60" cy="60" r="${radius}" stroke-dasharray="${length.toFixed(2)}" stroke-dashoffset="${(length * (1 - progress)).toFixed(2)}" transform="rotate(-90 60 60)" />
+        </svg>
+        <span class="clean-number">${escapeHtml(number.toLocaleString("he-IL"))}</span>
+        <span class="clean-unit">${unit}</span>
+      </div>
+      <div class="clean-text">
+        <p class="clean-kicker">רק להיום אני ${clean}</p>
+        <p class="clean-detail">${escapeHtml(keepNumbersTogether(main))}</p>
+        <p class="clean-next">${escapeHtml(keepNumbersTogether(`${daysWord(left)} ${target.label}`))}</p>
+        <p class="clean-since">מאז ${escapeHtml(formatDate(info.from))}</p>
+      </div>
     </section>`;
 }
 

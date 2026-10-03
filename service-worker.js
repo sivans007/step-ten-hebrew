@@ -1,5 +1,5 @@
 // עובד שירות לעבודה בלי אינטרנט. כשמשנים קבצים, מעלים את המספר ב-CACHE.
-const CACHE = "step-ten-v6";
+const CACHE = "step-ten-v7";
 const ASSETS = [
   "./",
   "./index.html",
